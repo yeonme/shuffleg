@@ -6,10 +6,12 @@ using UnityEngine;
 public class ConfigManager {
 
     public List<int[]> steps;
-    readonly string targetFile = Application.dataPath + "/embedded/steps.txt";
+    readonly string targetFile = Application.dataPath + "/StreamingAssets/steps.txt";
     public int maxPanda;
     public int speed;
     public int wait;
+    public int target;
+    public int targetvisible;
 
     public ConfigManager() {
         LoadFromFile();
@@ -41,6 +43,12 @@ public class ConfigManager {
                         break;
                     case "wait":
                         wait = right;
+                        break;
+                    case "target":
+                        target = right;
+                        break;
+                    case "targetvisible":
+                        targetvisible = right;
                         break;
                 }
             } else {

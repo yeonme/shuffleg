@@ -6,15 +6,14 @@ using UnityEngine;
 public class GameManager : MonoBehaviour {
 
     Animator[] anims = null;
-    Sprite[] sprites = null;
     GameObject[] go = null;
     List<GameObject> posPanda = null;
     ConfigManager cm = null;
+    GameObject arrow = null;
 
     float startedTime;
     float waiting = 1.0f;
-
-    int[] xPos = new int[] { 0, 3, 6, 9, 12 };
+    
     int curPos = -1;
 
     PandaStatus pandaStatus = PandaStatus.Waiting;
@@ -31,7 +30,7 @@ public class GameManager : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         cm = new ConfigManager();
-        startedTime = Time.time;
+        startedTime = Time.time+10.0f;
         distancePerSecond = 3.0f / (cm.speed * 0.001f);
         waiting = (cm.wait * 0.001f);
 
@@ -43,13 +42,14 @@ public class GameManager : MonoBehaviour {
             posPanda.Add(panda);
         }
         posPanda.Sort((a, b) => {
-            string aname = a.name.Replace("panda", "");
-            string bname = b.name.Replace("panda", "");
-            int ia = int.Parse(aname);
-            int ib = int.Parse(bname);
-            return ia - ib;
+            return NumberPanda(a) - NumberPanda(b);
         });
+        int i = 0;
         foreach(GameObject p in posPanda) {
+            i++;
+            if(i > cm.maxPanda) {
+                p.SetActive(false);
+            }
             Debug.Log(p.name);
         }
 
@@ -57,13 +57,27 @@ public class GameManager : MonoBehaviour {
         Debug.Log(string.Format("Animators: {0}", anims.Length));
         Debug.Log(string.Format("Avatar: {0}", anims[0].avatar));
 
+        arrow = GameObject.FindGameObjectWithTag("arrow");
+        arrow.transform.position = new Vector3((cm.target-1)*3.0f, 2.15f, 0);
+    }
 
+    private int NumberPanda(GameObject gobj) {
+        return int.Parse(gobj.name.Replace("panda", ""));
     }
 
     // Update is called once per frame
     void Update()
     {
-        curPos = currentTodo();
+        if(cm == null) {
+            Debug.Log("No CM Ready");
+            return;
+        }
+
+        if(Time.time < startedTime) {
+            return;
+        }
+
+        curPos = CurrentTodo();
         if(curPos < 0) {
             return;
         }
@@ -81,7 +95,7 @@ public class GameManager : MonoBehaviour {
         go[0].transform.Translate(distancePerSecond * Time.deltaTime, 0, 0);*/
     }
 
-    private int currentTodo() {
+    private int CurrentTodo() {
         float elapsedTime = Time.time - startedTime;
         //Debug.Log(cm.speed);
         int now = (int)Math.Truncate(elapsedTime / ((cm.speed * 0.001f) + waiting));
@@ -110,11 +124,23 @@ public class GameManager : MonoBehaviour {
         if (startFlag == 1) {
             Animator anim = panda.GetComponent<Animator>();
             anim.SetInteger("running", (direction == Direction.Left ? 1 : 2));
+            if (NumberPanda(panda) == cm.target) {
+                arrow.transform.position = new Vector3(panda.transform.localPosition.x, 2.15f, 0);
+            }
         } else if (startFlag == 2) {
             Animator anim = panda.GetComponent<Animator>();
             anim.SetInteger("running", 0);
-            panda.transform.position.Set((target + (direction == Direction.Left ? -1 : 1)) * 3.0f,0,0);
+            panda.transform.position.Set((target + (direction == Direction.Left ? -1 : 1)) * 3.0f,2.15f,0);
+            if (NumberPanda(panda) == cm.target) {
+                arrow.transform.position = new Vector3(panda.transform.localPosition.x, 2.15f, 0);
+            }
         } else {
+            if (cm.targetvisible != 1) {
+                arrow.SetActive(false);
+            }
+            if (NumberPanda(panda) == cm.target) {
+                arrow.transform.Translate(distancePerSecond * Time.deltaTime * (direction == Direction.Left ? -1 : 1), 0, 0);
+            }
             panda.transform.Translate(distancePerSecond * Time.deltaTime * (direction == Direction.Left ? -1 : 1), 0, 0);
         }
     }

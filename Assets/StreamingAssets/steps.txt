@@ -1,6 +1,8 @@
 count:4
 time:450
 wait:600
+target:2
+targetvisible:0
 1 2
 2 1
 1 2
